@@ -18,8 +18,9 @@ async def main(num_phases):
     print('waiting for phases to complete')
 
     results = []
-    for next_to_complete in asyncio.as_completed(phases):
-        answer = await next_to_complete
+    todo_generator = asyncio.as_completed(phases)
+    for future_ in todo_generator:
+        answer = await future_  # future.result()
         print('received answer {!r}'.format(answer))
         results.append(answer)
 
