@@ -19,7 +19,8 @@ if __name__ == '__main__':
     event_loop = asyncio.get_event_loop()
     try:
         print('entering event loop')
-        event_loop.run_until_complete(main(event_loop))
+        co_routine = main(event_loop)
+        event_loop.run_until_complete(co_routine)
     finally:
         print('closing event loop')
         event_loop.close()
