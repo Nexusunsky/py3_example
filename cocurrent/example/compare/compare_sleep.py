@@ -1,24 +1,51 @@
+import asyncio
 import os
 import time
 import threading
 import multiprocessing
 
+SECS = 10
 NUM_WORKERS = 4
 
 
-def only_sleep():
-    """ Do nothing, wait for a timer to expire """
+def print_proc():
     print("PID: %s, Process Name: %s, Thread Name: %s" % (
         os.getpid(),
         multiprocessing.current_process().name,
         threading.current_thread().name)
           )
-    time.sleep(1)
+
+
+async def only_co_sleep():
+    print_proc()
+    try:
+        await asyncio.sleep(SECS)
+    except StopIteration:
+        pass
+
+
+async def co_sleep():
+    start_time = time.time()
+    tasks = [only_co_sleep() for _ in range(NUM_WORKERS)]
+    await asyncio.wait(tasks)
+    end_time = time.time()
+    print("Coroutine time=", end_time - start_time)
+
+
+def run_coroutin():
+    event_loop = asyncio.get_event_loop()
+    try:
+        event_loop.run_until_complete(co_sleep())
+    finally:
+        event_loop.close()
+
+
+def only_sleep():
+    print_proc()
+    time.sleep(SECS)
 
 
 def run_serially():
-    global start_time, end_time
-    # Run tasks serially
     start_time = time.time()
     for _ in range(NUM_WORKERS):
         only_sleep()
@@ -27,8 +54,6 @@ def run_serially():
 
 
 def run_thread():
-    global start_time, end_time
-    # Run tasks using threads
     start_time = time.time()
     threads = [threading.Thread(target=only_sleep) for _ in range(NUM_WORKERS)]
     [thread.start() for thread in threads]
@@ -38,8 +63,6 @@ def run_thread():
 
 
 def run_process():
-    global start_time, end_time
-    # Run tasks using processes
     start_time = time.time()
     processes = [multiprocessing.Process(target=only_sleep()) for _ in range(NUM_WORKERS)]
     [process.start() for process in processes]
@@ -50,21 +73,6 @@ def run_process():
 
 if __name__ == '__main__':
     run_serially()
+    run_coroutin()
     run_thread()
     run_process()
-
-# PID: 6355, Process Name: MainProcess, Thread Name: MainThread
-# PID: 6355, Process Name: MainProcess, Thread Name: MainThread
-# PID: 6355, Process Name: MainProcess, Thread Name: MainThread
-# PID: 6355, Process Name: MainProcess, Thread Name: MainThread
-# Serial time= 4.0040059089660645
-# PID: 6355, Process Name: MainProcess, Thread Name: Thread-1
-# PID: 6355, Process Name: MainProcess, Thread Name: Thread-2
-# PID: 6355, Process Name: MainProcess, Thread Name: Thread-3
-# PID: 6355, Process Name: MainProcess, Thread Name: Thread-4
-# Threads time= 1.0056109428405762
-# PID: 6355, Process Name: MainProcess, Thread Name: MainThread
-# PID: 6355, Process Name: MainProcess, Thread Name: MainThread
-# PID: 6355, Process Name: MainProcess, Thread Name: MainThread
-# PID: 6355, Process Name: MainProcess, Thread Name: MainThread
-# Parallel time= 4.018326997756958
