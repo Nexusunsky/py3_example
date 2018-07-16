@@ -4,7 +4,7 @@ import time
 import threading
 import multiprocessing
 
-SECS = 10
+SECS = 1
 NUM_WORKERS = 4
 
 
@@ -25,19 +25,19 @@ async def only_co_sleep():
 
 
 async def co_sleep():
-    start_time = time.time()
     tasks = [only_co_sleep() for _ in range(NUM_WORKERS)]
     await asyncio.wait(tasks)
-    end_time = time.time()
-    print("Coroutine time=", end_time - start_time)
 
 
 def run_coroutin():
+    start_time = time.time()
     event_loop = asyncio.get_event_loop()
     try:
         event_loop.run_until_complete(co_sleep())
     finally:
         event_loop.close()
+    end_time = time.time()
+    print("Coroutine time=", end_time - start_time)
 
 
 def only_sleep():
